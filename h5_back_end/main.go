@@ -1,7 +1,7 @@
 package main
 
 import (
-	_ "h5_back_end/routers"
+	_ "go_util/h5_back_end/routers"
 	"github.com/astaxie/beego"
 	"net/http"
 	"html/template"

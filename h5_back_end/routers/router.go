@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"h5_back_end/controllers"
+	"go_util/h5_back_end/controllers"
 	"github.com/astaxie/beego"
 )
 

@@ -4,7 +4,7 @@ import (
 	"github.com/astaxie/beego"
 	"log"
 	"strings"
-	"h5_back_end/proto"
+	"go_util/h5_back_end/proto"
 	"github.com/golang/protobuf/proto"
 	"fmt"
 	"golang.org/x/net/websocket"

@@ -125,7 +125,7 @@ func main() {
 
 		baseName := filepath.Base(file)
 
-		fmt.Printf("\n\nDecode file %s%s", baseName, strings.Repeat(".", 45-len(baseName)))
+
 		baseName = strings.TrimSuffix(baseName, ".proto")
 
 		context, err := ReadAll(file)
@@ -133,9 +133,10 @@ func main() {
 
 		array := strings.Split(baseName, "_")
 		if len(array) != 2 {
-			fmt.Println(" [ignore]")
+			//fmt.Println(" [ignore]")
 			continue
 		}
+		fmt.Printf("\n\nDecode proto %s.proto%s", baseName, strings.Repeat(".", 45-len(baseName)))
 		moduleNum, err := strconv.Atoi(array[0])
 		check(err)
 		moduleName := array[1]
