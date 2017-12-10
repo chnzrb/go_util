@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<!--<link href="./static/css/bootstrap.min.css" rel="stylesheet" type="text/css" />-->
+<link rel="stylesheet" href="http://apps.bdimg.com/libs/bootstrap/3.2.0/css/bootstrap.min.css">
+<head>
+	<meta charset="utf-8">
+	<!--<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">-->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>{{.Title}}</title>
+</head>
+<body>
+<div class="container">
+<div class="row">
+	<div class="span12">
+	<div class="jumbotron error-container">
+		<div class="error-actions">
+			<a href="{{.redirect}}" class="btn btn-large btn-primary">
+				<i class="icon-chevron-left"></i>
+				返回上一页
+			</a>
+		</div> <!-- /error-actions -->
+		<h2>结果:</h2>
+		<p>{{.message|str2html}}</p>
+
+	</div> <!-- /error-container -->			
+	</div> <!-- /span12 -->
+</div>
+</div>
+</body>
+</html>

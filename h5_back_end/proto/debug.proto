@@ -1,0 +1,51 @@
+//debug调试
+syntax = "proto2";
+//debug
+message m_debug_tos {
+    required int32 type = 1;            //类型
+    repeated int32 param_list = 2;      //参数列表
+}
+
+//重启
+message m_restart_tos {
+}
+
+
+//生成数据
+message m_build_table_tos {
+}
+
+//生成数据
+message m_build_table_toc {
+    required string result = 1;
+}
+
+
+//编译项目
+message m_build_project_tos {
+}
+
+//编译项目
+message m_build_project_toc {
+    required string result = 1;
+}
+
+
+//生成地图数据
+message m_build_map_tos {
+}
+
+//生成地图数据
+message m_build_map_toc {
+    required string result = 1;
+}
+
+//生成场景数据
+message m_build_scene_tos {
+}
+
+//生成场景数据
+message m_build_scene_toc {
+    required string result = 1;
+}
+

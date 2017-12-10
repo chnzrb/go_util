@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<!--<link href="./static/css/bootstrap.min.css" rel="stylesheet" type="text/css" />-->
+<link rel="stylesheet" href="http://apps.bdimg.com/libs/bootstrap/3.2.0/css/bootstrap.min.css">
+<head>
+	<meta charset="utf-8">
+	<!--<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">-->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>{{.Title}}</title>
+</head>
+<body>
+<div class="container">
+	<div class="row clearfix">
+		<div class="col-md-12 column">
+			<div class="row clearfix">
+				<div class="col-md-2 column">
+				</div>
+				<div class="col-md-16 column">
+					<h1 class="jumbotron text-center">
+						trunk开发工具
+						<br><br><br><br>
+						<button onclick="location.href='/build_database'" type="button" class="btn btn-default btn-primary">生成数据</button>
+						<button onclick="location.href='/build_project'" type="button" class="btn btn-default btn-primary">编译服务器</button>
+						<button onclick="location.href='/submit_json'" type="button" class="btn btn-default btn-primary">提交json</button>
+						<button onclick="location.href='/build_map'" type="button" class="btn btn-default btn-primary">生成地图数据</button>
+					</h1>
+
+				</div>
+				<!--<div class="col-md-4 column">-->
+				<!--</div>-->
+			</div>
+		</div>
+	</div>
+</div>
+<!--<div class="container">-->
+	<!--<div class="row clearfix">-->
+		<!--<div class="col-md-12 column">-->
+			<!--<div class="row clearfix">-->
+				<!--<div class="col-md-2 column">-->
+				<!--</div>-->
+				<!--<div class="col-md-6 column">-->
+					<!--<h3 class="text-center text-success">-->
+						<!--项目管理-->
+
+					<!--</h3>-->
+					<!--<button onclick="location.href='/build_database'" type="button" class="btn btn-default btn-success">生成数据</button>-->
+					<!--<button onclick="location.href='/build_project'" type="button" class="btn btn-default btn-success">打包到服务端</button>-->
+					<!--<button onclick="location.href='/submit_json'" type="button" class="btn btn-default btn-success">提交json到客户端</button>-->
+					<!--<button onclick="location.href='/build_map'" type="button" class="btn btn-default btn-success">编译地图数据</button>-->
+				<!--</div>-->
+
+				<!--<div class="col-md-4 column">-->
+				<!--</div>-->
+			<!--</div>-->
+		<!--</div>-->
+	<!--</div>-->
+<!--</div>-->
+	<!--<div>-->
+		<!--<a href="/build_database">1.生成数据</a></p>-->
+ 		<!--<a href="/build_project">2.打包到服务端</a></p>-->
+		<!--<a href="/submit_json">3.提交json到客户端</a></p><br><br>-->
+		<!--<a href="/build_map">编译地图数据</a></p>-->
+	<!--&lt;!&ndash;	<a href="/restart_server">重启服务器</a></p>&ndash;&gt;-->
+	<!--</div>-->
+</body>
+</html>
