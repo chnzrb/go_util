@@ -218,9 +218,9 @@ func main() {
 
 				if msgNum == 1 {
 					socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{player_id = _PlayerId}) ->\n", msgNum)
-				} else if msgNum == 2 {
-					socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{status = ?CLIENT_STATE_WAIT_CREATE_ROLE, player_id = _PlayerId}) ->\n", msgNum)
 				} else if msgNum == 3 {
+					socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{status = ?CLIENT_STATE_WAIT_CREATE_ROLE, player_id = _PlayerId}) ->\n", msgNum)
+				} else if msgNum == 5 {
 					socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{status = ?CLIENT_STATE_WAIT_ENTER_GAME, player_id = _PlayerId}) ->\n", msgNum)
 				} else if msgNum >= 10000 && msgNum < 10100 {
 					socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{player_id = _PlayerId}) ->\n", msgNum)
