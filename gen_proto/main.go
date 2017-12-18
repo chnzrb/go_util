@@ -174,7 +174,7 @@ func main() {
 			}
 		}(a, file)
 
-		context = regexp.MustCompile(`import[ \t\n\r]*"[ \t\n\r]*[\w]+.proto[ \t\n\r]*"[ \t\n\r]*;`).ReplaceAllString(context, "")
+		context = regexp.MustCompile(`import\s*"\s*\w+.proto\s*"\s*;`).ReplaceAllString(context, "")
 		include += fmt.Sprintf("-include(\"p_%s.hrl\").\n", moduleName)
 
 		minMsgNum := moduleNum * 100
@@ -183,95 +183,123 @@ func main() {
 
 		messageProtoCode += fmt.Sprintf("\n/*************************************%s:[%d, %d]********************************************/\n", moduleName, minMsgNum, maxMsgNum)
 
-		reg := regexp.MustCompile(`message[ \t\n\r]+m_([\w]+)_tos[ \t\n\r]+{`)
+		reg := regexp.MustCompile(`message\s+m_(\w+)_to([cs])\s*{`)
 		matchArray := reg.FindAllStringSubmatch(context, -1)
 		for _, msg := range matchArray {
 			methodName := msg[1]
-
+			msgType := msg[2]
 			msgNum += 1
 
-			msgName := fmt.Sprintf("m_%s_tos", methodName)
+			if msgType == "s" {
+				msgName := fmt.Sprintf("m_%s_tos", methodName)
 
-			if methodNameMap[msgName] != "" {
-				panic("\nmethodName repeated:" + msgName)
-				os.Exit(1)
+				if methodNameMap[msgName] != "" {
+					panic("\nmethodName repeated:" + msgName)
+					os.Exit(1)
+				}
+
+				methodNameMap[msgName] = "0"
+
+				clientMsgName := fmt.Sprintf("m_%s_%s_tos", moduleName, methodName)
+
+				context = regexp.MustCompile(msgName).ReplaceAllString(context, clientMsgName)
+
+				messageProtoCode += fmt.Sprintf("//<%s:%d>\n", clientMsgName, msgNum)
+
+				protoCodeEncodeBody += fmt.Sprintf("encode(#%s{} = Msg) ->\n", msgName)
+
+				protoCodeEncodeBody += fmt.Sprintf("    Bin = p_%s:encode_msg(Msg),\n", moduleName)
+
+				protoCodeEncodeBody += fmt.Sprintf("    encode(%d, Bin);\n", msgNum)
+
+				protoCodeDecodeBody += fmt.Sprintf("decode(%d, Bin) ->\n", msgNum)
+
+				protoCodeDecodeBody += fmt.Sprintf("  p_%s:decode_msg(Bin, %s);\n", moduleName, msgName)
+
+				if msgNum == 1 {
+					socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{player_id = _PlayerId}) ->\n", msgNum)
+				} else if msgNum == 2 {
+					socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{status = ?CLIENT_STATE_WAIT_CREATE_ROLE, player_id = _PlayerId}) ->\n", msgNum)
+				} else if msgNum == 3 {
+					socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{status = ?CLIENT_STATE_WAIT_ENTER_GAME, player_id = _PlayerId}) ->\n", msgNum)
+				} else if msgNum >= 10000 && msgNum < 10100 {
+					socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{player_id = _PlayerId}) ->\n", msgNum)
+					socketRouterBody += fmt.Sprintf("    ?ASSERT(?IS_DEBUG, {proto_no_debug, %d}),\n", msgNum)
+				} else {
+					socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{status = ?CLIENT_STATE_ENTER_GAME, player_id = _PlayerId}) ->\n", msgNum)
+				}
+
+				socketRouterBody += fmt.Sprintf("    Msg = p_%s:decode_msg(Bin, %s),\n", moduleName, msgName)
+				socketRouterBody += "    mod_log:write_player_receive_proto_log(_PlayerId, Msg),\n"
+
+				socketRouterBody += fmt.Sprintf("    api_%s:%s(Msg, State);\n", moduleName, methodName)
+			}else {
+				msgName := fmt.Sprintf("m_%s_toc", methodName)
+
+				if methodNameMap[msgName] != "" {
+					panic("methodName repeated:" + methodName)
+					os.Exit(1)
+				}
+
+				methodNameMap[msgName] = "0"
+
+				clientMsgName := fmt.Sprintf("m_%s_%s_toc", moduleName, methodName)
+
+				context = regexp.MustCompile(msgName).ReplaceAllString(context, clientMsgName)
+
+				messageProtoCode += fmt.Sprintf("//<%s:%d>\n", clientMsgName, msgNum)
+
+				protoCodeEncodeBody += fmt.Sprintf("encode(#%s{} = Msg) ->\n", msgName)
+
+				protoCodeEncodeBody += fmt.Sprintf("    Bin = p_%s:encode_msg(Msg),\n", moduleName)
+
+				protoCodeEncodeBody += fmt.Sprintf("    encode(%d, Bin);\n", msgNum)
+
+				protoCodeDecodeBody += fmt.Sprintf("decode(%d, Bin) ->\n", msgNum)
+
+				protoCodeDecodeBody += fmt.Sprintf("  p_%s:decode_msg(Bin, %s);\n", moduleName, msgName)
 			}
 
-			methodNameMap[msgName] = "0"
-
-			clientMsgName := fmt.Sprintf("m_%s_%s_tos", moduleName, methodName)
-
-			context = regexp.MustCompile(msgName).ReplaceAllString(context, clientMsgName)
-
-			messageProtoCode += fmt.Sprintf("//<%s:%d>\n", clientMsgName, msgNum)
-
-			protoCodeEncodeBody += fmt.Sprintf("encode(#%s{} = Msg) ->\n", msgName)
-
-			protoCodeEncodeBody += fmt.Sprintf("    Bin = p_%s:encode_msg(Msg),\n", moduleName)
-
-			protoCodeEncodeBody += fmt.Sprintf("    encode(%d, Bin);\n", msgNum)
-
-			protoCodeDecodeBody += fmt.Sprintf("decode(%d, Bin) ->\n", msgNum)
-
-			protoCodeDecodeBody += fmt.Sprintf("  p_%s:decode_msg(Bin, %s);\n", moduleName, msgName)
-
-			if msgNum == 1 {
-				socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{player_id = _PlayerId}) ->\n", msgNum)
-			} else if msgNum == 2 {
-				socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{status = ?CLIENT_STATE_WAIT_CREATE_ROLE, player_id = _PlayerId}) ->\n", msgNum)
-			} else if msgNum == 3 {
-				socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{status = ?CLIENT_STATE_WAIT_ENTER_GAME, player_id = _PlayerId}) ->\n", msgNum)
-			} else if msgNum >= 10000 && msgNum < 10100 {
-				socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{player_id = _PlayerId}) ->\n", msgNum)
-				socketRouterBody += fmt.Sprintf("    ?ASSERT(?IS_DEBUG, {proto_no_debug, %d}),\n", msgNum)
-			} else {
-				socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{status = ?CLIENT_STATE_ENTER_GAME, player_id = _PlayerId}) ->\n", msgNum)
-			}
-
-			socketRouterBody += fmt.Sprintf("    Msg = p_%s:decode_msg(Bin, %s),\n", moduleName, msgName)
-			socketRouterBody += "    mod_log:write_player_receive_proto_log(_PlayerId, Msg),\n"
-
-			socketRouterBody += fmt.Sprintf("    api_%s:%s(Msg, State);\n", moduleName, methodName)
 		}
-		reg = regexp.MustCompile(`message[ \t\n\r]+m_([\w]+)_toc[ \t\n\r]+{`)
-		matchArray = reg.FindAllStringSubmatch(context, -1)
-		for _, msg := range matchArray {
-			methodName := msg[1]
-			//fmt.Println(msg[1])
-
-			msgNum += 1
-
-			msgName := fmt.Sprintf("m_%s_toc", methodName)
-
-			if methodNameMap[msgName] != "" {
-				panic("methodName repeated:" + methodName)
-				os.Exit(1)
-			}
-
-			methodNameMap[msgName] = "0"
-
-			clientMsgName := fmt.Sprintf("m_%s_%s_toc", moduleName, methodName)
-
-			context = regexp.MustCompile(msgName).ReplaceAllString(context, clientMsgName)
-
-			messageProtoCode += fmt.Sprintf("//<%s:%d>\n", clientMsgName, msgNum)
-
-			protoCodeEncodeBody += fmt.Sprintf("encode(#%s{} = Msg) ->\n", msgName)
-
-			protoCodeEncodeBody += fmt.Sprintf("    Bin = p_%s:encode_msg(Msg),\n", moduleName)
-
-			protoCodeEncodeBody += fmt.Sprintf("    encode(%d, Bin);\n", msgNum)
-
-			protoCodeDecodeBody += fmt.Sprintf("decode(%d, Bin) ->\n", msgNum)
-
-			protoCodeDecodeBody += fmt.Sprintf("  p_%s:decode_msg(Bin, %s);\n", moduleName, msgName)
-		}
+		//reg = regexp.MustCompile(`message[ \t\n\r]+m_([\w]+)_toc[ \t\n\r]+{`)
+		//matchArray = reg.FindAllStringSubmatch(context, -1)
+		//for _, msg := range matchArray {
+		//	methodName := msg[1]
+		//	//fmt.Println(msg[1])
+		//
+		//	msgNum += 1
+		//
+		//	msgName := fmt.Sprintf("m_%s_toc", methodName)
+		//
+		//	if methodNameMap[msgName] != "" {
+		//		panic("methodName repeated:" + methodName)
+		//		os.Exit(1)
+		//	}
+		//
+		//	methodNameMap[msgName] = "0"
+		//
+		//	clientMsgName := fmt.Sprintf("m_%s_%s_toc", moduleName, methodName)
+		//
+		//	context = regexp.MustCompile(msgName).ReplaceAllString(context, clientMsgName)
+		//
+		//	messageProtoCode += fmt.Sprintf("//<%s:%d>\n", clientMsgName, msgNum)
+		//
+		//	protoCodeEncodeBody += fmt.Sprintf("encode(#%s{} = Msg) ->\n", msgName)
+		//
+		//	protoCodeEncodeBody += fmt.Sprintf("    Bin = p_%s:encode_msg(Msg),\n", moduleName)
+		//
+		//	protoCodeEncodeBody += fmt.Sprintf("    encode(%d, Bin);\n", msgNum)
+		//
+		//	protoCodeDecodeBody += fmt.Sprintf("decode(%d, Bin) ->\n", msgNum)
+		//
+		//	protoCodeDecodeBody += fmt.Sprintf("  p_%s:decode_msg(Bin, %s);\n", moduleName, msgName)
+		//}
 		messageProtoCode += context
 
-		reg = regexp.MustCompile(`enum[ \t\n\r]+[\w]+[ \t\n\r]*{([^}]*)}`)
+		reg = regexp.MustCompile(`enum\s+\w+\s*{([^}]*)}`)
 		matchArray = reg.FindAllStringSubmatch(context, -1)
 		for _, msg := range matchArray {
-			reg = regexp.MustCompile(`[ \t\n\r]*([\w]+)[ \t\n\r]*=[ \t\n\r]*[\d]+[ \t\n\r]*;`)
+			reg = regexp.MustCompile(`\s*(\w+)\s*=\s*\d+\s*;`)
 			for _, enumArray := range reg.FindAllStringSubmatch(msg[1], -1) {
 				//fmt.Print(enumArray[1])
 				enumMap[enumArray[1]] = "1"
