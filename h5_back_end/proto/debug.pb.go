@@ -9,6 +9,7 @@ It is generated from these files:
 
 It has these top-level messages:
 	MDebugTos
+	MDebugToc
 	MRestartTos
 	MBuildTableTos
 	MBuildTableToc
@@ -18,6 +19,8 @@ It has these top-level messages:
 	MBuildMapToc
 	MBuildSceneTos
 	MBuildSceneToc
+	MBuildProtoTos
+	MBuildProtoToc
 */
 package debug
 
@@ -35,6 +38,40 @@ var _ = math.Inf
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
+type MDebugToc_ENUM int32
+
+const (
+	MDebugToc_success MDebugToc_ENUM = 1
+	MDebugToc_fail    MDebugToc_ENUM = 2
+)
+
+var MDebugToc_ENUM_name = map[int32]string{
+	1: "success",
+	2: "fail",
+}
+var MDebugToc_ENUM_value = map[string]int32{
+	"success": 1,
+	"fail":    2,
+}
+
+func (x MDebugToc_ENUM) Enum() *MDebugToc_ENUM {
+	p := new(MDebugToc_ENUM)
+	*p = x
+	return p
+}
+func (x MDebugToc_ENUM) String() string {
+	return proto.EnumName(MDebugToc_ENUM_name, int32(x))
+}
+func (x *MDebugToc_ENUM) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(MDebugToc_ENUM_value, data, "MDebugToc_ENUM")
+	if err != nil {
+		return err
+	}
+	*x = MDebugToc_ENUM(value)
+	return nil
+}
+func (MDebugToc_ENUM) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{1, 0} }
 
 // debug
 type MDebugTos struct {
@@ -62,6 +99,32 @@ func (m *MDebugTos) GetParamList() []int32 {
 	return nil
 }
 
+// debug
+type MDebugToc struct {
+	Type             *int32          `protobuf:"varint,1,req,name=type" json:"type,omitempty"`
+	Result           *MDebugToc_ENUM `protobuf:"varint,2,req,name=result,enum=MDebugToc_ENUM" json:"result,omitempty"`
+	XXX_unrecognized []byte          `json:"-"`
+}
+
+func (m *MDebugToc) Reset()                    { *m = MDebugToc{} }
+func (m *MDebugToc) String() string            { return proto.CompactTextString(m) }
+func (*MDebugToc) ProtoMessage()               {}
+func (*MDebugToc) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+func (m *MDebugToc) GetType() int32 {
+	if m != nil && m.Type != nil {
+		return *m.Type
+	}
+	return 0
+}
+
+func (m *MDebugToc) GetResult() MDebugToc_ENUM {
+	if m != nil && m.Result != nil {
+		return *m.Result
+	}
+	return MDebugToc_success
+}
+
 // 重启
 type MRestartTos struct {
 	XXX_unrecognized []byte `json:"-"`
@@ -70,7 +133,7 @@ type MRestartTos struct {
 func (m *MRestartTos) Reset()                    { *m = MRestartTos{} }
 func (m *MRestartTos) String() string            { return proto.CompactTextString(m) }
 func (*MRestartTos) ProtoMessage()               {}
-func (*MRestartTos) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+func (*MRestartTos) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
 // 生成数据
 type MBuildTableTos struct {
@@ -80,7 +143,7 @@ type MBuildTableTos struct {
 func (m *MBuildTableTos) Reset()                    { *m = MBuildTableTos{} }
 func (m *MBuildTableTos) String() string            { return proto.CompactTextString(m) }
 func (*MBuildTableTos) ProtoMessage()               {}
-func (*MBuildTableTos) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+func (*MBuildTableTos) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
 
 // 生成数据
 type MBuildTableToc struct {
@@ -91,7 +154,7 @@ type MBuildTableToc struct {
 func (m *MBuildTableToc) Reset()                    { *m = MBuildTableToc{} }
 func (m *MBuildTableToc) String() string            { return proto.CompactTextString(m) }
 func (*MBuildTableToc) ProtoMessage()               {}
-func (*MBuildTableToc) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+func (*MBuildTableToc) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
 
 func (m *MBuildTableToc) GetResult() string {
 	if m != nil && m.Result != nil {
@@ -108,7 +171,7 @@ type MBuildProjectTos struct {
 func (m *MBuildProjectTos) Reset()                    { *m = MBuildProjectTos{} }
 func (m *MBuildProjectTos) String() string            { return proto.CompactTextString(m) }
 func (*MBuildProjectTos) ProtoMessage()               {}
-func (*MBuildProjectTos) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+func (*MBuildProjectTos) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
 
 // 编译项目
 type MBuildProjectToc struct {
@@ -119,7 +182,7 @@ type MBuildProjectToc struct {
 func (m *MBuildProjectToc) Reset()                    { *m = MBuildProjectToc{} }
 func (m *MBuildProjectToc) String() string            { return proto.CompactTextString(m) }
 func (*MBuildProjectToc) ProtoMessage()               {}
-func (*MBuildProjectToc) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+func (*MBuildProjectToc) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
 
 func (m *MBuildProjectToc) GetResult() string {
 	if m != nil && m.Result != nil {
@@ -136,7 +199,7 @@ type MBuildMapTos struct {
 func (m *MBuildMapTos) Reset()                    { *m = MBuildMapTos{} }
 func (m *MBuildMapTos) String() string            { return proto.CompactTextString(m) }
 func (*MBuildMapTos) ProtoMessage()               {}
-func (*MBuildMapTos) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+func (*MBuildMapTos) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
 
 // 生成地图数据
 type MBuildMapToc struct {
@@ -147,7 +210,7 @@ type MBuildMapToc struct {
 func (m *MBuildMapToc) Reset()                    { *m = MBuildMapToc{} }
 func (m *MBuildMapToc) String() string            { return proto.CompactTextString(m) }
 func (*MBuildMapToc) ProtoMessage()               {}
-func (*MBuildMapToc) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+func (*MBuildMapToc) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
 
 func (m *MBuildMapToc) GetResult() string {
 	if m != nil && m.Result != nil {
@@ -164,7 +227,7 @@ type MBuildSceneTos struct {
 func (m *MBuildSceneTos) Reset()                    { *m = MBuildSceneTos{} }
 func (m *MBuildSceneTos) String() string            { return proto.CompactTextString(m) }
 func (*MBuildSceneTos) ProtoMessage()               {}
-func (*MBuildSceneTos) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+func (*MBuildSceneTos) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
 
 // 生成场景数据
 type MBuildSceneToc struct {
@@ -175,7 +238,7 @@ type MBuildSceneToc struct {
 func (m *MBuildSceneToc) Reset()                    { *m = MBuildSceneToc{} }
 func (m *MBuildSceneToc) String() string            { return proto.CompactTextString(m) }
 func (*MBuildSceneToc) ProtoMessage()               {}
-func (*MBuildSceneToc) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+func (*MBuildSceneToc) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
 
 func (m *MBuildSceneToc) GetResult() string {
 	if m != nil && m.Result != nil {
@@ -184,8 +247,37 @@ func (m *MBuildSceneToc) GetResult() string {
 	return ""
 }
 
+// 生成协议
+type MBuildProtoTos struct {
+	XXX_unrecognized []byte `json:"-"`
+}
+
+func (m *MBuildProtoTos) Reset()                    { *m = MBuildProtoTos{} }
+func (m *MBuildProtoTos) String() string            { return proto.CompactTextString(m) }
+func (*MBuildProtoTos) ProtoMessage()               {}
+func (*MBuildProtoTos) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+
+// 生成协议
+type MBuildProtoToc struct {
+	Result           *string `protobuf:"bytes,1,req,name=result" json:"result,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *MBuildProtoToc) Reset()                    { *m = MBuildProtoToc{} }
+func (m *MBuildProtoToc) String() string            { return proto.CompactTextString(m) }
+func (*MBuildProtoToc) ProtoMessage()               {}
+func (*MBuildProtoToc) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+
+func (m *MBuildProtoToc) GetResult() string {
+	if m != nil && m.Result != nil {
+		return *m.Result
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*MDebugTos)(nil), "m_debug_tos")
+	proto.RegisterType((*MDebugToc)(nil), "m_debug_toc")
 	proto.RegisterType((*MRestartTos)(nil), "m_restart_tos")
 	proto.RegisterType((*MBuildTableTos)(nil), "m_build_table_tos")
 	proto.RegisterType((*MBuildTableToc)(nil), "m_build_table_toc")
@@ -195,23 +287,29 @@ func init() {
 	proto.RegisterType((*MBuildMapToc)(nil), "m_build_map_toc")
 	proto.RegisterType((*MBuildSceneTos)(nil), "m_build_scene_tos")
 	proto.RegisterType((*MBuildSceneToc)(nil), "m_build_scene_toc")
+	proto.RegisterType((*MBuildProtoTos)(nil), "m_build_proto_tos")
+	proto.RegisterType((*MBuildProtoToc)(nil), "m_build_proto_toc")
+	proto.RegisterEnum("MDebugToc_ENUM", MDebugToc_ENUM_name, MDebugToc_ENUM_value)
 }
 
 func init() { proto.RegisterFile("debug.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 194 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x8f, 0xc1, 0x8a, 0xc2, 0x30,
-	0x10, 0x86, 0xd9, 0xee, 0x76, 0xa1, 0x53, 0x96, 0xd2, 0x94, 0x95, 0x5e, 0x84, 0x92, 0x53, 0x45,
-	0xf4, 0x19, 0x7c, 0x00, 0x4f, 0x7d, 0x81, 0x90, 0xb6, 0x83, 0x54, 0x12, 0x13, 0x92, 0xe9, 0xc1,
-	0xb7, 0x17, 0xa3, 0x05, 0xb1, 0xf6, 0x36, 0xf3, 0xf1, 0xcf, 0x37, 0xfc, 0x90, 0xf6, 0xd8, 0x8e,
-	0xa7, 0xbd, 0x75, 0x86, 0x0c, 0x3f, 0x40, 0xaa, 0x45, 0x00, 0x82, 0x8c, 0x67, 0x0c, 0x7e, 0xe8,
-	0x6a, 0xb1, 0xfc, 0xaa, 0xa2, 0x3a, 0x6e, 0xc2, 0xcc, 0xd6, 0x00, 0x56, 0x3a, 0xa9, 0x85, 0x1a,
-	0x3c, 0x95, 0x51, 0xf5, 0x5d, 0xc7, 0x4d, 0x12, 0xc8, 0x71, 0xf0, 0xc4, 0x33, 0xf8, 0xd3, 0xc2,
-	0xa1, 0x27, 0xe9, 0xe8, 0xee, 0xe0, 0x05, 0xe4, 0x5a, 0xb4, 0xe3, 0xa0, 0x7a, 0x41, 0xb2, 0x55,
-	0x18, 0xe0, 0x76, 0x0e, 0x3b, 0xb6, 0x82, 0x5f, 0x87, 0x7e, 0x54, 0x14, 0xfe, 0x25, 0xcd, 0x73,
-	0xe3, 0xff, 0x50, 0x4c, 0x61, 0xeb, 0xcc, 0x19, 0xbb, 0x87, 0x78, 0xf7, 0x09, 0x2f, 0x5b, 0x72,
-	0xc8, 0xa6, 0xb8, 0x96, 0x36, 0x18, 0x36, 0xef, 0x68, 0xf9, 0xfa, 0xa5, 0x85, 0xef, 0xf0, 0x32,
-	0x6b, 0x31, 0xc1, 0x45, 0xc3, 0x2d, 0x00, 0x00, 0xff, 0xff, 0x91, 0xf4, 0x82, 0x17, 0x68, 0x01,
-	0x00, 0x00,
+	// 254 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x91, 0x41, 0x4b, 0xc3, 0x30,
+	0x14, 0xc7, 0x59, 0xed, 0xd4, 0xbd, 0xa2, 0x5b, 0x33, 0x94, 0x5d, 0x06, 0x23, 0xa7, 0x0e, 0xb1,
+	0x07, 0x3f, 0x81, 0x17, 0x6f, 0xea, 0xa1, 0xe0, 0x39, 0xa4, 0x59, 0x94, 0x6a, 0x62, 0x43, 0xde,
+	0xeb, 0xc1, 0x6f, 0x2f, 0x8d, 0x76, 0x94, 0xad, 0x85, 0xdd, 0x92, 0x1f, 0xef, 0xff, 0xcb, 0xff,
+	0x11, 0x48, 0x76, 0xba, 0x6c, 0x3e, 0x72, 0xe7, 0x6b, 0xaa, 0xf9, 0x23, 0x24, 0x56, 0x04, 0x20,
+	0xa8, 0x46, 0xc6, 0x20, 0xa6, 0x1f, 0xa7, 0x57, 0x93, 0x4d, 0x94, 0x4d, 0x8b, 0x70, 0x66, 0x6b,
+	0x00, 0x27, 0xbd, 0xb4, 0xc2, 0x54, 0x48, 0xab, 0x68, 0x73, 0x96, 0x4d, 0x8b, 0x59, 0x20, 0xcf,
+	0x15, 0x12, 0xff, 0xea, 0x1b, 0xd4, 0xa0, 0x61, 0x0b, 0xe7, 0x5e, 0x63, 0x63, 0xda, 0x74, 0x94,
+	0x5d, 0x3f, 0xa4, 0x79, 0x2f, 0x91, 0x3f, 0xbd, 0xbe, 0xbd, 0x14, 0xff, 0x03, 0x7c, 0x0d, 0x71,
+	0x7b, 0x67, 0x09, 0x5c, 0x60, 0xa3, 0x94, 0x46, 0x5c, 0x4c, 0xd8, 0x25, 0xc4, 0xef, 0xb2, 0x32,
+	0x8b, 0x88, 0xcf, 0xe1, 0xca, 0x0a, 0xaf, 0x91, 0xa4, 0xa7, 0xb6, 0x30, 0x5f, 0x42, 0x6a, 0x45,
+	0xd9, 0x54, 0x66, 0x27, 0x48, 0x96, 0x46, 0x07, 0x78, 0x77, 0x0c, 0x15, 0xbb, 0xdd, 0x97, 0x68,
+	0xab, 0xcd, 0xf6, 0x2f, 0xde, 0xc0, 0xb2, 0x1b, 0x76, 0xbe, 0xfe, 0xd4, 0xea, 0x4f, 0x7c, 0x3f,
+	0x84, 0xc7, 0x2d, 0x29, 0xcc, 0xbb, 0x71, 0x2b, 0x5d, 0x30, 0x6c, 0x0f, 0xd1, 0x78, 0xba, 0xb7,
+	0x05, 0x2a, 0xfd, 0x7d, 0xb4, 0x45, 0x07, 0x4f, 0x32, 0x84, 0x8f, 0x3d, 0x34, 0x74, 0x70, 0xd4,
+	0xf0, 0x1b, 0x00, 0x00, 0xff, 0xff, 0xb7, 0xe2, 0xf6, 0x06, 0x17, 0x02, 0x00, 0x00,
 }

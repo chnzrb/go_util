@@ -29,38 +29,47 @@ func check(e error) {
 	}
 }
 
-
-func (c *MainController) BuildDatabase() {
-	//c.Data["redirect"] = "/"
-	//c.TplName = "message.html"
-	//ws, err := websocket.Dial(wsUrl, "", wsUrl)
-	//check(err)
-	//
-	//request := debug.MBuildTableTos{}
-	//mRequest, err := proto.Marshal(&request)
-	//check(err)
-	//
-	//_, err = ws.Write(Packet(10003, mRequest))
-	//fmt.Println(Packet(10003, mRequest))
-	//
-	//var receive = make([]byte, 1024, 1024)
-	//n, err := ws.Read(receive)
-	//check(err)
-	//respone := &debug.MBuildTableToc{}
-	//err = proto.Unmarshal(receive[5:n], respone)
-	//check(err)
-	//
-	//stringResult := *respone.Result
-	//if strings.Contains(stringResult, "success"){
-	//	stringResult = "恭喜, 你成功了！"
-	//} else{
-	//	stringResult = "失败了!!!!!!!!!!!!!!!!!!\n"
-	//}
-	//c.Data["message"] = stringResult
-	do(c, 10003, &debug.MBuildTableTos{}, &debug.MBuildTableToc{})
+func (c *MainController) BuildProto() {
+	do(c, 10003, &debug.MBuildProtoTos{}, &debug.MBuildProtoToc{})
 }
 
-func do(c *MainController, protoNum int, requestPb proto.Message, resoponePb proto.Message) {
+func (c *MainController) BuildTable() {
+	do(c, 10005, &debug.MBuildTableTos{}, &debug.MBuildTableToc{})
+}
+
+func (c *MainController) BuildMap() {
+	do(c, 10007, &debug.MBuildMapTos{}, &debug.MBuildMapToc{})
+}
+
+func (c *MainController) BuildScene() {
+	do(c, 10009, &debug.MBuildSceneTos{}, &debug.MBuildSceneToc{})
+}
+
+func (c *MainController) BuildProject() {
+	do(c, 10011, &debug.MBuildProjectTos{}, &debug.MBuildProjectToc{})
+}
+
+func (c *MainController) Restart() {
+	c.Data["redirect"] = "/"
+	c.TplName = "message.html"
+	result := ""
+	ws, err := websocket.Dial(wsUrl, "", wsUrl)
+	if err != nil {
+		log.Fatal(err)
+	}
+	request := debug.MRestartTos{}
+	mRequest, err := proto.Marshal(&request)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = ws.Write(Packet(10013, mRequest))
+	fmt.Println(Packet(10013, mRequest))
+	result = "请等待服务器重启！"
+	c.Data["message"] = result
+}
+
+
+func do(c *MainController, protoNum int, requestPb proto.Message, responsePb proto.Message) {
 	c.Data["redirect"] = "/"
 	c.TplName = "message.html"
 	ws, err := websocket.Dial(wsUrl, "", wsUrl)
@@ -76,7 +85,7 @@ func do(c *MainController, protoNum int, requestPb proto.Message, resoponePb pro
 	var receive = make([]byte, 1024, 1024)
 	n, err := ws.Read(receive)
 	check(err)
-	respone := resoponePb
+	respone := responsePb
 	err = proto.Unmarshal(receive[5:n], respone)
 	check(err)
 
@@ -102,37 +111,9 @@ func IntToBytes(n int) []byte {
 }
 
 
-func (c *MainController) Restart() {
-	c.Data["redirect"] = "/"
-	c.TplName = "message.html"
-	result := ""
-	ws, err := websocket.Dial(wsUrl, "", wsUrl)
-	if err != nil {
-		log.Fatal(err)
-	}
-	request := debug.MRestartTos{}
-	mRequest, err := proto.Marshal(&request)
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, err = ws.Write(Packet(10002, mRequest))
-	fmt.Println(Packet(10002, mRequest))
-    result = "请等待服务器重启！"
-	c.Data["message"] = result
-}
 
 
-func (c *MainController) BuildMap() {
-	do(c, 10005, &debug.MBuildMapTos{}, &debug.MBuildMapToc{})
-}
 
-func (c *MainController) BuildScene() {
-	do(c, 10006, &debug.MBuildSceneTos{}, &debug.MBuildSceneToc{})
-}
-
-func (c *MainController) BuildProject() {
-	do(c, 10004, &debug.MBuildProjectTos{}, &debug.MBuildProjectToc{})
-}
 
 
 

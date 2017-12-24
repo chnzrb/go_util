@@ -1,10 +1,21 @@
 //debug调试
-syntax = "proto2";
+
 //debug
 message m_debug_tos {
     required int32 type = 1;            //类型
     repeated int32 param_list = 2;      //参数列表
 }
+
+//debug
+message m_debug_toc {
+    required int32 type = 1;            //类型
+    enum ENUM {
+        success = 1;    //成功
+        fail = 2;       //失败
+    }
+    required ENUM result = 2;
+}
+
 
 //重启
 message m_restart_tos {
@@ -46,6 +57,15 @@ message m_build_scene_tos {
 
 //生成场景数据
 message m_build_scene_toc {
+    required string result = 1;
+}
+
+//生成协议
+message m_build_proto_tos {
+}
+
+//生成协议
+message m_build_proto_toc {
     required string result = 1;
 }
 

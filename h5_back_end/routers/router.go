@@ -7,7 +7,8 @@ import (
 
 func init() {
 	beego.Router("/", &controllers.MainController{})
-	beego.Router("/build_database", &controllers.MainController{}, "*:BuildDatabase")
+	beego.Router("/build_table", &controllers.MainController{}, "*:BuildTable")
+	beego.Router("/build_proto", &controllers.MainController{}, "*:BuildProto")
 	//beego.Router("/submit_json", &controllers.MainController{}, "*:SubmitJson")
 	beego.Router("/build_map", &controllers.MainController{}, "*:BuildMap")
 	beego.Router("/build_project", &controllers.MainController{}, "*:BuildProject")
