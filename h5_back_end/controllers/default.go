@@ -11,9 +11,12 @@ import (
 
 	"bytes"
 	"encoding/binary"
+	"compress/zlib"
+	"io"
+	//"regexp"
 )
 
-const wsUrl = "ws://127.0.0.1:5050"
+const wsUrl = "ws://192.168.31.100:5050"
 
 type MainController struct {
 	beego.Controller
@@ -66,8 +69,17 @@ func (c *MainController) Restart() {
 	fmt.Println(Packet(10013, mRequest))
 	result = "请等待服务器重启！"
 	c.Data["message"] = result
+	ws.Close()
 }
 
+//进行zlib解压缩
+func DoZlibUnCompress(compressSrc []byte) []byte {
+	b := bytes.NewReader(compressSrc)
+	var out bytes.Buffer
+	r, _ := zlib.NewReader(b)
+	io.Copy(&out, r)
+	return out.Bytes()
+}
 
 func do(c *MainController, protoNum int, requestPb proto.Message, responsePb proto.Message) {
 	c.Data["redirect"] = "/"
@@ -82,20 +94,43 @@ func do(c *MainController, protoNum int, requestPb proto.Message, responsePb pro
 	_, err = ws.Write(Packet(protoNum, mRequest))
 	fmt.Println(Packet(protoNum, mRequest))
 
-	var receive = make([]byte, 1024, 1024)
+	var receive = make([]byte, 10240, 1024000)
 	n, err := ws.Read(receive)
 	check(err)
 	respone := responsePb
-	err = proto.Unmarshal(receive[5:n], respone)
+	//f :=receive[1]
+	//isZip := f >> 7 == 1
+	//fmt.Printf("isZip:%v", isZip)
+	data := receive[5:n]
+	//if isZip{
+	//	data = DoZlibUnCompress(data)
+	//}
+	err = proto.Unmarshal(data, respone)
 	check(err)
 
 	stringResult := respone.String()
-	if strings.Contains(stringResult, "success"){
+	//fmt.Println("stringResult=", respone.ProtoMessage)
+	//fmt.Println("stringResult=", stringResult)
+	//fmt.Println(stringResult == "success")
+	//fmt.Println(strings.Compare(stringResult,"success"))
+	if strings.Contains(stringResult, "result:\"success\"") {
 		stringResult = "恭喜, 你成功了！"
-	} else{
-		stringResult = "失败了!!!!!!!!!!!!!!!!!!\n"
+	} else {
+		stringResult = strings.Replace(stringResult, " ", "&nbsp", -1)
+		stringResult = strings.Replace(stringResult, "\\n", "<br>", -1)
+		stringResult = "失败了!!!!!!!!!!!!!!!!!!\n"+stringResult
 	}
+	////fmt.Print(stringResult)
+	//stringResult = strings.Replace(stringResult, " ", "&nbsp", -1)
+	//stringResult = strings.Replace(stringResult, "\\n", "<br>", -1)
+	////stringResult = regexp.MustCompile(`\\n`).ReplaceAllString(stringResult, "<br>")
+	//if strings.Contains(stringResult, "success"){
+	//	stringResult = "恭喜, 你成功了！"
+	//} else{
+	//	stringResult = "失败了!!!!!!!!!!!!!!!!!!\n"+stringResult
+	//}
 	c.Data["message"] = stringResult
+	ws.Close()
 }
 //封包
 func Packet(methodNum int, message []byte) []byte {
