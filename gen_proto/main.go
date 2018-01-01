@@ -19,7 +19,7 @@ import (
 )
 
 var includePath = "../include/"
-var genSrcPath = "../src/gen/proto/"
+var genSrcPath = "../src/gen/"
 var protoPath = "../proto/"
 var clientProtoPath = "E:/youwo_h5/trunk/resource/server_client/proto/"
 
@@ -156,7 +156,7 @@ func main() {
 			"-o-erl",
 			genSrcPath,
 			"-o-hrl",
-			"../include/",
+			includePath,
 			"-v",
 			"always",
 			erlReadProtoFile,
