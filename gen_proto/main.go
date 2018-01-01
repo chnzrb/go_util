@@ -19,7 +19,7 @@ import (
 )
 
 var includePath = "../include/"
-var genSrcPath = "../src/gen/"
+var genSrcPath = "../src/gen/proto/"
 var protoPath = "../proto/"
 var clientProtoPath = "E:/youwo_h5/trunk/resource/server_client/proto/"
 
@@ -154,7 +154,7 @@ func main() {
 			"-I",
 			protoPath,
 			"-o-erl",
-			"../src/gen/",
+			genSrcPath,
 			"-o-hrl",
 			"../include/",
 			"-v",
@@ -350,7 +350,7 @@ func main() {
 	usedTime := time.Since(t0)
 	fmt.Print("\n\n")
 	fmt.Print("*************************************************************\n\n")
-	fmt.Print("                      build proto success\n\n")
+	fmt.Print("                      All finished\n\n")
 	fmt.Printf("                         %s second\n\n", usedTime.String())
 	fmt.Print("*************************************************************\n\n")
 }
