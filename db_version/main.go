@@ -62,6 +62,7 @@ func init() {
 
 	db.SetMaxOpenConns(50)
 	db.SetMaxIdleConns(20)
+	//db.SetConnMaxLifetime()
 }
 
 func main() {
@@ -110,24 +111,15 @@ func update(fileName string, nowDbVersion int) {
 	context, err := ioutil.ReadAll(file)
 	checkerr(err, "读取文件失败")
 	sqlList := strings.Split(string(context), ";")
-	//var wg sync.WaitGroup
 	for _, sql := range sqlList {
 		if strings.Contains(sql, "TABLE") {
-			//fmt.Println("\nSQL:", sql, "\n")
-			//wg.Add(1)
-			//go func(sql string) {
-			//	defer wg.Done()
-			//	_, err := db.Exec("use `" + database + "` ;")
-			//	checkerr(err, "切换数据库失败")
 				_, err = db.Exec(sql)
 				if err != nil {
 					fmt.Println("\nSQL:", sql)
 					checkerr(err, "SQL执行失败")
 				}
-			//}(sql)
 		}
 	}
-	//wg.Wait()
 	updateDbVersion(thisSqlFileVersion)
 	fmt.Println(" [OK]")
 }
@@ -177,7 +169,8 @@ func getDbVersion() int {
 func updateDbVersion(version int) {
 	_, err := db.Exec("use `" + database + "` ;")
 	checkerr(err, "切换数据库失败")
-	_, err = db.Query("UPDATE `db_version` SET `version` = " + strconv.Itoa(version))
+	row, err := db.Query("UPDATE `db_version` SET `version` = " + strconv.Itoa(version))
+	row.Close()
 	checkerr(err, "更新数据库版本失败")
 }
 
