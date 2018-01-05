@@ -11,7 +11,7 @@ import (
 	"time"
 	"io/ioutil"
 	"strconv"
-	"sync"
+	//"sync"
 	"runtime"
 	"sort"
 )
@@ -110,24 +110,24 @@ func update(fileName string, nowDbVersion int) {
 	context, err := ioutil.ReadAll(file)
 	checkerr(err, "读取文件失败")
 	sqlList := strings.Split(string(context), ";")
-	var wg sync.WaitGroup
+	//var wg sync.WaitGroup
 	for _, sql := range sqlList {
 		if strings.Contains(sql, "TABLE") {
 			//fmt.Println("\nSQL:", sql, "\n")
-			wg.Add(1)
-			go func(sql string) {
-				defer wg.Done()
-				_, err := db.Exec("use `" + database + "` ;")
-				checkerr(err, "切换数据库失败")
+			//wg.Add(1)
+			//go func(sql string) {
+			//	defer wg.Done()
+			//	_, err := db.Exec("use `" + database + "` ;")
+			//	checkerr(err, "切换数据库失败")
 				_, err = db.Exec(sql)
 				if err != nil {
 					fmt.Println("\nSQL:", sql)
 					checkerr(err, "SQL执行失败")
 				}
-			}(sql)
+			//}(sql)
 		}
 	}
-	wg.Wait()
+	//wg.Wait()
 	updateDbVersion(thisSqlFileVersion)
 	fmt.Println(" [OK]")
 }
