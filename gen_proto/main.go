@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"time"
 	"os/exec"
-	"runtime"
+	//"runtime"
 	"sync"
 	"bytes"
 	"log"
@@ -36,7 +36,7 @@ func checkFileIsExist(filename string) (bool) {
 	}
 	return exist
 }
-func cmd(commandName string, params []string) string {
+func escript(commandName string, params []string) string {
 	cmd := exec.Command(commandName, params...)
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -44,11 +44,10 @@ func cmd(commandName string, params []string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//log.Printf("Waiting for command to finish...")
-	//fmt.Println(cmd.Args)
 	err = cmd.Wait()
 	if err != nil {
-		log.Printf("Command finished with error: %v", err)
+		log.Printf("Command finished with error: %v \nout: %v", err, out.String())
+		panic(err)
 	}
 	//fmt.Print(out.String())
 	return out.String()
@@ -114,7 +113,8 @@ func main() {
 		moduleName := array[1]
 
 		erlReadProtoFile := protoPath + moduleName + ".proto"
-		filePutContext(erlReadProtoFile, noAnnotationContext)
+
+		//defer os.Remove(erlReadProtoFile)
 		a := []string{
 			"proto.escript",
 			"-type",
@@ -134,16 +134,24 @@ func main() {
 			erlReadProtoFile,
 		}
 		wg.Add(1)
+		//defer func() {
+		//	err = os.Remove(erlReadProtoFile)
+		//	fmt.Println("删除1:", erlReadProtoFile)
+		//	if err != nil{
+		//		fmt.Println("删除失败1:", erlReadProtoFile, err)
+		//	}
+		//}()
 		go func(commandArgs [] string, file string ) {
+			filePutContext(erlReadProtoFile, noAnnotationContext)
 			defer wg.Done()
-			//execCommand("escript", commandArgs)
-			out := cmd("escript", commandArgs)
-			err = os.Remove(erlReadProtoFile)
-			check(err)
-
-			if out != "" {
-				panic("\n" + file + "\n" + out)
-			}
+			defer func() {
+				err = os.Remove(erlReadProtoFile)
+				//fmt.Println("删除:", erlReadProtoFile)
+				if err != nil{
+					fmt.Println("删除失败:", erlReadProtoFile, err)
+				}
+			}()
+			escript("escript", commandArgs)
 		}(a, file)
 
 		context = regexp.MustCompile(`import\s*"\s*\w+.proto\s*"\s*;`).ReplaceAllString(context, "")
@@ -337,19 +345,16 @@ func ReadAll(filePth string) (string, error) {
 	return string(context), err
 }
 func filePutContext(filename string, context string) {
-	var f *os.File
-	var err error
-	if checkFileIsExist(filename) {
-		//如果文件存在
-		del := os.Remove(filename)
-		if del != nil {
-			fmt.Println(del)
-		}
-	}
-	f, err = os.Create(filename) //创建文件
+	//if checkFileIsExist(filename) {
+	//	//如果文件存在
+	//	fmt.Println("文件存在", filename)
+	//	del := os.Remove(filename)
+	//	check(del)
+	//}
+	f, err := os.Create(filename) //创建文件
 	check(err)
+	defer f.Close()
 	_, err = io.WriteString(f, context)
-	f.Close()
 	check(err)
 }
 
