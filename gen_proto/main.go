@@ -54,35 +54,6 @@ func cmd(commandName string, params []string) string {
 	return out.String()
 }
 
-//func execCommand(commandName string, params []string) bool {
-//	cmd := exec.Command(commandName, params...)
-//
-//	//显示运行的命令
-//	//fmt.Println(cmd.Args)
-//
-//	stdout, err := cmd.StdoutPipe()
-//
-//	if err != nil {
-//		fmt.Println(err)
-//		return false
-//	}
-//
-//	cmd.Start()
-//
-//	reader := bufio.NewReader(stdout)
-//
-//	//实时循环读取输出流中的一行内容
-//	for {
-//		line, err2 := reader.ReadString('\n')
-//		if err2 != nil || io.EOF == err2 {
-//			break
-//		}
-//		fmt.Println(line)
-//	}
-//
-//	cmd.Wait()
-//	return true
-//}
 
 func main() {
 	isCreateClientProto := os.Args[1]
@@ -129,6 +100,7 @@ func main() {
 		baseName = strings.TrimSuffix(baseName, ".proto")
 
 		context, err := ReadAll(file)
+		noAnnotationContext := regexp.MustCompile(`//[^\n]*`).ReplaceAllString(context, "")
 		check(err)
 
 		array := strings.Split(baseName, "_")
@@ -142,7 +114,7 @@ func main() {
 		moduleName := array[1]
 
 		erlReadProtoFile := protoPath + moduleName + ".proto"
-		filePutContext(erlReadProtoFile, context)
+		filePutContext(erlReadProtoFile, noAnnotationContext)
 		a := []string{
 			"proto.escript",
 			"-type",
@@ -184,7 +156,7 @@ func main() {
 		messageProtoCode += fmt.Sprintf("\n/*************************************%s:[%d, %d]********************************************/\n", moduleName, minMsgNum, maxMsgNum)
 
 		reg := regexp.MustCompile(`message\s+m_(\w+)_to([cs])\s*{`)
-		matchArray := reg.FindAllStringSubmatch(context, -1)
+		matchArray := reg.FindAllStringSubmatch(noAnnotationContext, -1)
 		for _, msg := range matchArray {
 			methodName := msg[1]
 			msgType := msg[2]
@@ -297,7 +269,7 @@ func main() {
 		messageProtoCode += context
 
 		reg = regexp.MustCompile(`enum\s+\w+\s*{([^}]*)}`)
-		matchArray = reg.FindAllStringSubmatch(context, -1)
+		matchArray = reg.FindAllStringSubmatch(noAnnotationContext, -1)
 		for _, msg := range matchArray {
 			reg = regexp.MustCompile(`\s*(\w+)\s*=\s*\d+\s*;`)
 			for _, enumArray := range reg.FindAllStringSubmatch(msg[1], -1) {
