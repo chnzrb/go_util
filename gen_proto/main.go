@@ -4,7 +4,7 @@ package main
 import (
 	"os"
 	"fmt"
-	"io"
+	//"io"
 	"strings"
 	"path/filepath"
 	"io/ioutil"
@@ -16,16 +16,25 @@ import (
 	"sync"
 	"bytes"
 	"log"
+	"runtime"
+	"io"
 )
 
 var includePath = "../include/"
 var genSrcPath = "../src/gen/"
 var protoPath = "../proto/"
+var tmpProtoPath = "../proto/"
 var clientProtoPath = "E:/youwo_h5/trunk/resource/server_client/proto/"
 
-func check(e error) {
-	if e != nil {
-		panic(e)
+func check(err error, msg ...string) {
+	//if e != nil {
+	//	panic(e)
+	//}
+	if err != nil {
+		_, file, line, _ := runtime.Caller(1)
+		fileBaseName := filepath.Base(file)
+		fmt.Printf("[ERROR]%s:%d %s %v", fileBaseName, line, msg, err)
+		os.Exit(1)
 	}
 }
 
@@ -36,7 +45,7 @@ func checkFileIsExist(filename string) (bool) {
 	}
 	return exist
 }
-func escript(commandName string, params []string) string {
+func cmd(commandName string, params []string) (string, error) {
 	cmd := exec.Command(commandName, params...)
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -45,12 +54,13 @@ func escript(commandName string, params []string) string {
 		log.Fatal(err)
 	}
 	err = cmd.Wait()
-	if err != nil {
-		log.Printf("Command finished with error: %v \nout: %v", err, out.String())
-		panic(err)
-	}
+	//check(err, out.String())
+	//if err != nil {
+	//	log.Printf("Command finished with error: %v \nout: %v", err, out.String())
+	//	panic(err)
+	//}
 	//fmt.Print(out.String())
-	return out.String()
+	return out.String(), err
 }
 
 
@@ -59,7 +69,7 @@ func main() {
 	t0 := time.Now()
 	var socketRouterHead string
 
-	enumMap := make(map[string]string)
+	enumMap := make(map[string]string, 200)
 	socketRouterHead += "-module(socket_router).\n"
 	socketRouterHead += "-export([handle/2]).\n"
 	socketRouterHead += "-include(\"common.hrl\").\n"
@@ -88,23 +98,19 @@ func main() {
 
 	files := getFileList(protoPath, ".proto")
 	runtime.GOMAXPROCS(2)
-	//c := make(chan int, 50)
+
 	var wg sync.WaitGroup
+
 	for _, file := range files {
-		methodNameMap := make(map[string]string)
+		methodNameMap := make(map[string]string, 15)
 
 		baseName := filepath.Base(file)
 
 
 		baseName = strings.TrimSuffix(baseName, ".proto")
 
-		context, err := ReadAll(file)
-		noAnnotationContext := regexp.MustCompile(`//[^\n]*`).ReplaceAllString(context, "")
-		check(err)
-
 		array := strings.Split(baseName, "_")
 		if len(array) != 2 {
-			//fmt.Println(" [ignore]")
 			continue
 		}
 		fmt.Printf("\n\nDecode proto %s.proto%s", baseName, strings.Repeat(".", 45-len(baseName)))
@@ -112,47 +118,46 @@ func main() {
 		check(err)
 		moduleName := array[1]
 
-		erlReadProtoFile := protoPath + moduleName + ".proto"
 
-		//defer os.Remove(erlReadProtoFile)
-		a := []string{
-			"proto.escript",
-			"-type",
-			"-W",
-			"-Werror",
-			"-msgtolower",
-			"-modprefix",
-			"p_",
-			"-I",
-			protoPath,
-			"-o-erl",
-			genSrcPath,
-			"-o-hrl",
-			includePath,
-			"-v",
-			"always",
-			erlReadProtoFile,
-		}
+		context, err := ReadAll(file)
+		check(err)
+		noAnnotationContext := regexp.MustCompile(`//[^\n]*`).ReplaceAllString(context, "")
+
+
+
+		erlReadProtoFile := tmpProtoPath + moduleName + ".proto"
+
+
 		wg.Add(1)
-		//defer func() {
-		//	err = os.Remove(erlReadProtoFile)
-		//	fmt.Println("删除1:", erlReadProtoFile)
-		//	if err != nil{
-		//		fmt.Println("删除失败1:", erlReadProtoFile, err)
-		//	}
-		//}()
-		go func(commandArgs [] string, file string ) {
+
+		go func() {
+			commandArgs := []string{
+				"proto.escript",
+				"-type",
+				"-W",
+				"-Werror",
+				"-msgtolower",
+				"-modprefix",
+				"p_",
+				"-I",
+				tmpProtoPath,
+				"-o-erl",
+				genSrcPath,
+				"-o-hrl",
+				includePath,
+				"-v",
+				"always",
+				erlReadProtoFile,
+			}
 			filePutContext(erlReadProtoFile, noAnnotationContext)
 			defer wg.Done()
 			defer func() {
 				err = os.Remove(erlReadProtoFile)
-				//fmt.Println("删除:", erlReadProtoFile)
-				if err != nil{
-					fmt.Println("删除失败:", erlReadProtoFile, err)
-				}
+				check(err)
 			}()
-			escript("escript", commandArgs)
-		}(a, file)
+			out, err :=cmd("escript", commandArgs)
+			check(err, erlReadProtoFile, out)
+		}()
 
 		context = regexp.MustCompile(`import\s*"\s*\w+.proto\s*"\s*;`).ReplaceAllString(context, "")
 		include += fmt.Sprintf("-include(\"p_%s.hrl\").\n", moduleName)
@@ -331,26 +336,26 @@ func main() {
 	fmt.Print("\n\n")
 	fmt.Print("*************************************************************\n\n")
 	fmt.Print("                      All finished\n\n")
-	fmt.Printf("                         %s second\n\n", usedTime.String())
+	fmt.Printf("                    %s second\n\n", usedTime.String())
 	fmt.Print("*************************************************************\n\n")
 }
 
 func ReadAll(filePth string) (string, error) {
 	f, err := os.Open(filePth)
+	defer f.Close()
 	if err != nil {
 		return "", err
 	}
-
 	context, err := ioutil.ReadAll(f)
 	return string(context), err
 }
 func filePutContext(filename string, context string) {
-	//if checkFileIsExist(filename) {
-	//	//如果文件存在
-	//	fmt.Println("文件存在", filename)
-	//	del := os.Remove(filename)
-	//	check(del)
-	//}
+	if checkFileIsExist(filename) {
+		//如果文件存在
+		//fmt.Println("文件存在", filename)
+		del := os.Remove(filename)
+		check(del)
+	}
 	f, err := os.Create(filename) //创建文件
 	check(err)
 	defer f.Close()
@@ -358,13 +363,9 @@ func filePutContext(filename string, context string) {
 	check(err)
 }
 
-//func get_base_name(fileName string, ext string) string {
-//	baseName := filepath.Base(fileName)
-//	return strings.TrimSuffix(baseName, ext)
-//}
 
 func getFileList(path string, suffix string) (files []string) {
-	files = make([]string, 0, 10)
+	files = make([]string, 0, 30)
 	err := filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
 		if f == nil {
 			return err
@@ -385,42 +386,3 @@ func getFileList(path string, suffix string) (files []string) {
 	}
 	return files
 }
-
-//获取指定目录下的所有文件，不进入下一级目录搜索，可以匹配后缀过滤。
-//func ListDir(dirPth string, suffix string) (files []string, err error) {
-//	files = make([]string, 0, 10)
-//	dir, err := ioutil.ReadDir(dirPth)
-//	if err != nil {
-//		return nil, err
-//	}
-//	PthSep := string(os.PathSeparator)
-//	suffix = strings.ToUpper(suffix) //忽略后缀匹配的大小写
-//	for _, fi := range dir {
-//		if fi.IsDir() { // 忽略目录
-//			continue
-//		}
-//		if strings.HasSuffix(strings.ToUpper(fi.Name()), suffix) { //匹配文件
-//			files = append(files, dirPth+PthSep+fi.Name())
-//		}
-//	}
-//	return files, nil
-//}
-//
-////获取指定目录及所有子目录下的所有文件，可以匹配后缀过滤。
-//func WalkDir(dirPth, suffix string) (files []string, err error) {
-//	files = make([]string, 0, 30)
-//	suffix = strings.ToUpper(suffix)                                                     //忽略后缀匹配的大小写
-//	err = filepath.Walk(dirPth, func(filename string, fi os.FileInfo, err error) error { //遍历目录
-//		//if err != nil { //忽略错误
-//		// return err
-//		//}
-//		if fi.IsDir() { // 忽略目录
-//			return nil
-//		}
-//		if strings.HasSuffix(strings.ToUpper(fi.Name()), suffix) {
-//			files = append(files, filename)
-//		}
-//		return nil
-//	})
-//	return files, err
-//}
