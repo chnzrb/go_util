@@ -29,15 +29,12 @@ func init() {
 	if len(os.Args) != 3 {
 		fmt.Println("参数错误!!!")
 		fmt.Println(".example db_version [update | drop | version] localhost")
-		os.Exit(-1)
+		os.Exit(1)
 	}
 	action = os.Args[1]
 	section := os.Args[2]
 	config, err := config.NewConfig("ini", "./config.ini")
-	if err != nil {
-		fmt.Println("配置读取失败!")
-		os.Exit(-1)
-	}
+	checkerr(err, "配置读取失败")
 	db_user := config.String(section + "::db_user")
 	db_passwd := config.String(section + "::db_passwd")
 	db_name := config.String(section + "::db_name")
@@ -86,7 +83,7 @@ func main() {
 		fmt.Println("当前数据库版本:", nowDbVersion)
 	default:
 		fmt.Println("参数错误:", action)
-		os.Exit(-1)
+		os.Exit(1)
 	}
 	cost := time.Since(t1)
 	fmt.Println("耗时:", cost)
@@ -151,7 +148,7 @@ func getDbVersionFromFileName(fimeName string) int {
 	baseName := filepath.Base(fimeName)
 	versionStr := strings.Split(baseName, ".")[0]
 	versionInt, err := strconv.Atoi(versionStr)
-	checkerr(err, "文件名转换版本号失败" + fimeName)
+	checkerr(err, "文件名转换版本号失败:" + fimeName)
 	return versionInt
 }
 func getDbVersion() int {
@@ -193,4 +190,13 @@ func getSQLFileList(dirPth, suffix string) (files []string, err error) {
 		return nil
 	})
 	return files, err
+}
+
+func checkerr(err error, desc string) {
+	if err != nil {
+		_, file, line, _ := runtime.Caller(1)
+		fileBaseName := filepath.Base(file)
+		fmt.Printf("[ERROR]%s:%d %s %v", fileBaseName, line, desc, err)
+		os.Exit(1)
+	}
 }
