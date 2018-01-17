@@ -24,7 +24,7 @@ var includePath = "../include/"
 var genSrcPath = "../src/gen/"
 var protoPath = "../proto/"
 var tmpProtoPath = "../proto/"
-var clientProtoPath = "E:/youwo_h5/trunk/resource/server_client/proto/"
+var clientProtoPath = "E:/h5/trunk/resource/server_client/proto/"
 
 func check(err error, msg ...string) {
 	//if e != nil {
