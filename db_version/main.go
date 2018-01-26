@@ -183,7 +183,7 @@ func getSQLFileList(dirPth, suffix string) (files []string, err error) {
 		}
 		if strings.HasSuffix(strings.ToUpper(fi.Name()), suffix) {
 			baseName := filepath.Base(filename)
-			if len(baseName) == 12{
+			if len(baseName) == 14{
 				files = append(files, filename)
 			}
 		}
