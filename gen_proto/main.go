@@ -13,7 +13,7 @@ import (
 	"time"
 	"os/exec"
 	//"runtime"
-	"sync"
+	//"sync"
 	"bytes"
 	"log"
 	"runtime"
@@ -74,7 +74,7 @@ func main() {
 	socketRouterHead += "-export([handle/2]).\n"
 	socketRouterHead += "-include(\"common.hrl\").\n"
 	socketRouterHead += "-include(\"prof.hrl\").\n\n"
-
+	socketRouterHead += "-include(\"p_message.hrl\").\n\n"
 	include := ""
 	socketRouterBody := "handle(<<>>, State = #conn{player_id  = _PlayerId}) ->\n"
 	socketRouterBody += "    State;\n"
@@ -89,7 +89,8 @@ func main() {
 	messageProtoCode += fmt.Sprintf("//Auto Created :%s\n\n", time.Now().String())
 
 	protoCodeHead := "-module(proto).\n"
-	protoCodeHead += "-export([encode/1, decode/1]).\n\n"
+	protoCodeHead += "-export([encode/1, decode/1]).\n"
+	protoCodeHead += "-include(\"p_message.hrl\").\n\n"
 
 	protoCodeEncodeBody := ""
 
@@ -99,7 +100,7 @@ func main() {
 	files := getFileList(protoPath, ".proto")
 	runtime.GOMAXPROCS(2)
 
-	var wg sync.WaitGroup
+	//var wg sync.WaitGroup
 
 	for _, file := range files {
 		methodNameMap := make(map[string]string, 15)
@@ -118,49 +119,49 @@ func main() {
 		check(err)
 		moduleName := array[1]
 
-
+		reg := regexp.MustCompile(`message\s+m_(\w+)_to([cs])\s*{`)
 		context, err := ReadAll(file)
 		check(err)
 		noAnnotationContext := regexp.MustCompile(`//[^\n]*`).ReplaceAllString(context, "")
 
 
 
-		erlReadProtoFile := tmpProtoPath + moduleName + ".proto"
+		//erlReadProtoFile := tmpProtoPath + moduleName + ".proto"
 
 
-		wg.Add(1)
+		//wg.Add(1)
 
 		go func() {
-			commandArgs := []string{
-				"proto.escript",
-				"-type",
-				"-W",
-				"-Werror",
-				"-msgtolower",
-				"-modprefix",
-				"p_",
-				"-I",
-				tmpProtoPath,
-				"-o-erl",
-				genSrcPath,
-				"-o-hrl",
-				includePath,
-				"-v",
-				"always",
-				erlReadProtoFile,
-			}
-			filePutContext(erlReadProtoFile, noAnnotationContext)
-			defer wg.Done()
-			defer func() {
-				err = os.Remove(erlReadProtoFile)
-				check(err)
-			}()
-			out, err :=cmd("escript", commandArgs)
-			check(err, erlReadProtoFile, out)
+			//commandArgs := []string{
+			//	"proto.escript",
+			//	"-type",
+			//	"-W",
+			//	"-Werror",
+			//	"-msgtolower",
+			//	"-modprefix",
+			//	"p_",
+			//	"-I",
+			//	tmpProtoPath,
+			//	"-o-erl",
+			//	genSrcPath,
+			//	"-o-hrl",
+			//	includePath,
+			//	"-v",
+			//	"always",
+			//	erlReadProtoFile,
+			//}
+			//filePutContext(erlReadProtoFile, noAnnotationContext)
+			//defer wg.Done()
+			//defer func() {
+			//	err = os.Remove(erlReadProtoFile)
+			//	check(err)
+			//}()
+			//out, err :=cmd("escript", commandArgs)
+			//check(err, erlReadProtoFile, out)
 		}()
 
 		context = regexp.MustCompile(`import\s*"\s*\w+.proto\s*"\s*;`).ReplaceAllString(context, "")
-		include += fmt.Sprintf("-include(\"p_%s.hrl\").\n", moduleName)
+		//include += fmt.Sprintf("-include(\"p_%s.hrl\").\n", moduleName)
 
 		minMsgNum := moduleNum * 100
 		maxMsgNum := minMsgNum + 100
@@ -168,7 +169,7 @@ func main() {
 
 		messageProtoCode += fmt.Sprintf("\n/*************************************%s:[%d, %d]********************************************/\n", moduleName, minMsgNum, maxMsgNum)
 
-		reg := regexp.MustCompile(`message\s+m_(\w+)_to([cs])\s*{`)
+
 		matchArray := reg.FindAllStringSubmatch(noAnnotationContext, -1)
 		for _, msg := range matchArray {
 			methodName := msg[1]
@@ -191,15 +192,15 @@ func main() {
 
 				messageProtoCode += fmt.Sprintf("//<%s:%d>\n", clientMsgName, msgNum)
 
-				protoCodeEncodeBody += fmt.Sprintf("encode(#%s{} = Msg) ->\n", msgName)
+				protoCodeEncodeBody += fmt.Sprintf("encode(#%s{} = Msg) ->\n", clientMsgName)
 
-				protoCodeEncodeBody += fmt.Sprintf("    Bin = p_%s:encode_msg(Msg),\n", moduleName)
+				protoCodeEncodeBody += fmt.Sprintf("    Bin = p_message:encode_msg(Msg),\n")
 
 				protoCodeEncodeBody += fmt.Sprintf("    encode(%d, Bin);\n", msgNum)
 
 				protoCodeDecodeBody += fmt.Sprintf("decode(%d, Bin) ->\n", msgNum)
 
-				protoCodeDecodeBody += fmt.Sprintf("  p_%s:decode_msg(Bin, %s);\n", moduleName, msgName)
+				protoCodeDecodeBody += fmt.Sprintf("  p_message:decode_msg(Bin, %s);\n", clientMsgName)
 
 				if msgNum == 1 {
 					socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{player_id = _PlayerId}) ->\n", msgNum)
@@ -214,7 +215,7 @@ func main() {
 					socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{status = ?CLIENT_STATE_ENTER_GAME, player_id = _PlayerId}) ->\n", msgNum)
 				}
 
-				socketRouterBody += fmt.Sprintf("    Msg = p_%s:decode_msg(Bin, %s),\n", moduleName, msgName)
+				socketRouterBody += fmt.Sprintf("    Msg = p_message:decode_msg(Bin, %s),\n", clientMsgName)
 				socketRouterBody += "    mod_log:write_player_receive_proto_log(_PlayerId, Msg),\n"
 
 				socketRouterBody += fmt.Sprintf("    api_%s:%s(Msg, State);\n", moduleName, methodName)
@@ -234,15 +235,15 @@ func main() {
 
 				messageProtoCode += fmt.Sprintf("//<%s:%d>\n", clientMsgName, msgNum)
 
-				protoCodeEncodeBody += fmt.Sprintf("encode(#%s{} = Msg) ->\n", msgName)
+				protoCodeEncodeBody += fmt.Sprintf("encode(#%s{} = Msg) ->\n", clientMsgName)
 
-				protoCodeEncodeBody += fmt.Sprintf("    Bin = p_%s:encode_msg(Msg),\n", moduleName)
+				protoCodeEncodeBody += fmt.Sprintf("    Bin = p_message:encode_msg(Msg),\n")
 
 				protoCodeEncodeBody += fmt.Sprintf("    encode(%d, Bin);\n", msgNum)
 
 				protoCodeDecodeBody += fmt.Sprintf("decode(%d, Bin) ->\n", msgNum)
 
-				protoCodeDecodeBody += fmt.Sprintf("  p_%s:decode_msg(Bin, %s);\n", moduleName, msgName)
+				protoCodeDecodeBody += fmt.Sprintf("  p_message:decode_msg(Bin, %s);\n", clientMsgName)
 			}
 
 		}
@@ -331,7 +332,39 @@ func main() {
 	if isCreateClientProto == "true" {
 		filePutContext(clientProtoPath+"message.proto", messageProtoCode)
 	}
-	wg.Wait()
+	filePutContext(tmpProtoPath+"message.proto", messageProtoCode)
+	commandArgs := []string{
+		"proto.escript",
+		"-type",
+		"-W",
+		"-Werror",
+		"-msgtolower",
+		"-modprefix",
+		"p_",
+		"-I",
+		tmpProtoPath,
+		"-o-erl",
+		genSrcPath,
+		"-o-hrl",
+		includePath,
+		"-v",
+		"always",
+		"message.proto",
+	}
+
+	//filePutContext(erlReadProtoFile, noAnnotationContext)
+	//defer wg.Done()
+	//defer func() {
+	//	err = os.Remove(erlReadProtoFile)
+	//	check(err)
+	//}()
+	out, err :=cmd("escript", commandArgs)
+	check(err, "", out)
+
+	err = os.Remove(tmpProtoPath+"message.proto")
+	check(err, tmpProtoPath+"message.proto")
+
+	//wg.Wait()
 	usedTime := time.Since(t0)
 	fmt.Print("\n\n")
 	fmt.Print("*************************************************************\n\n")
