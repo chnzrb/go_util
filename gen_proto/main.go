@@ -101,7 +101,7 @@ func main() {
 	runtime.GOMAXPROCS(2)
 
 	//var wg sync.WaitGroup
-
+	nameReg := regexp.MustCompile(`(\d+)_(\w+)`)
 	for _, file := range files {
 		methodNameMap := make(map[string]string, 15)
 
@@ -110,14 +110,16 @@ func main() {
 
 		baseName = strings.TrimSuffix(baseName, ".proto")
 
-		array := strings.Split(baseName, "_")
-		if len(array) != 2 {
-			continue
-		}
+		//array := strings.Split(baseName, "_")
+		array := nameReg.FindAllStringSubmatch(baseName, 1)
+		//fmt.Println("nameArray:", array[0])
+		//if len(array) < 2 {
+		//	continue
+		//}
 		fmt.Printf("\n\nDecode proto %s.proto%s", baseName, strings.Repeat(".", 45-len(baseName)))
-		moduleNum, err := strconv.Atoi(array[0])
+		moduleNum, err := strconv.Atoi(array[0][1])
 		check(err)
-		moduleName := array[1]
+		moduleName := array[0][2]
 
 		reg := regexp.MustCompile(`message\s+m_(\w+)_to([cs])\s*{`)
 		context, err := ReadAll(file)
