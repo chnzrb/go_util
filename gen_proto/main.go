@@ -340,6 +340,7 @@ func main() {
 		"-type",
 		"-W",
 		"-Werror",
+		"-strbin",
 		"-msgtolower",
 		"-modprefix",
 		"p_",
