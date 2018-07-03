@@ -36,10 +36,26 @@ func init() {
 	config, err := config.NewConfig("ini", "./config.ini")
 	checkerr(err, "配置读取失败")
 	db_user := config.String(section + "::db_user")
+	if db_user == "" {
+		fmt.Printf( "[配置读取失败] %s::%s 不存在\n", section, "db_user")
+		os.Exit(1)
+	}
 	db_passwd := config.String(section + "::db_passwd")
 	db_name := config.String(section + "::db_name")
+	if db_name == "" {
+		fmt.Printf( "[配置读取失败] %s::%s 不存在\n", section, "db_name")
+		os.Exit(1)
+	}
 	db_host := config.String(section + "::db_host")
+	if db_host == "" {
+		fmt.Printf( "[配置读取失败] %s::%s 不存在\n", section, "db_host")
+		os.Exit(1)
+	}
 	db_port := config.String(section + "::db_port")
+	if db_port == "" {
+		fmt.Printf( "[配置读取失败] %s::%s 不存在\n", section, "db_port")
+		os.Exit(1)
+	}
 
 	sqlDir = config.String("sql_dir")
 
