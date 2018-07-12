@@ -24,7 +24,7 @@ var includePath = "../include/"
 var genSrcPath = "../src/gen/"
 var protoPath = "../proto/"
 var tmpProtoPath = "../proto/"
-var clientProtoPath = "E:/h5/trunk/resource/server_client/proto/"
+var clientProtoPath = "../../server_client/proto/"
 
 func check(err error, msg ...string) {
 	//if e != nil {
@@ -87,7 +87,8 @@ func main() {
 	socketRouterBody += "    NewState.\n\n"
 	messageProtoCode := ""
 	messageProtoCode += fmt.Sprintf("//Auto Created :%s\n\n", time.Now().String())
-
+	messageProtoCode += "package proto;\n"
+	gmContent := ""
 	protoCodeHead := "-module(proto).\n"
 	protoCodeHead += "-export([encode/1, decode/1]).\n"
 	protoCodeHead += "-include(\"p_message.hrl\").\n\n"
@@ -127,7 +128,7 @@ func main() {
 		noAnnotationContext := regexp.MustCompile(`//[^\n]*`).ReplaceAllString(context, "")
 
 
-
+		regexp.MustCompile(`\s*is_platform\s*:\s*"\w"`).ReplaceAllString(context, "is_platform:\"s1\"")
 		//erlReadProtoFile := tmpProtoPath + moduleName + ".proto"
 
 
@@ -165,11 +166,16 @@ func main() {
 		context = regexp.MustCompile(`import\s*"\s*\w+.proto\s*"\s*;`).ReplaceAllString(context, "")
 		//include += fmt.Sprintf("-include(\"p_%s.hrl\").\n", moduleName)
 
+
 		minMsgNum := moduleNum * 100
 		maxMsgNum := minMsgNum + 100
 		msgNum := minMsgNum
 
-		messageProtoCode += fmt.Sprintf("\n/*************************************%s:[%d, %d]********************************************/\n", moduleName, minMsgNum, maxMsgNum)
+		if moduleNum == 99 {
+			gmContent += fmt.Sprintf("\n/*************************************%s:[%d, %d]********************************************/\n", moduleName, minMsgNum, maxMsgNum)
+		} else {
+			messageProtoCode += fmt.Sprintf("\n/*************************************%s:[%d, %d]********************************************/\n", moduleName, minMsgNum, maxMsgNum)
+		}
 
 
 		matchArray := reg.FindAllStringSubmatch(noAnnotationContext, -1)
@@ -192,7 +198,12 @@ func main() {
 
 				context = regexp.MustCompile(msgName).ReplaceAllString(context, clientMsgName)
 
-				messageProtoCode += fmt.Sprintf("//<%s:%d>\n", clientMsgName, msgNum)
+				if moduleNum == 99 {
+					gmContent += fmt.Sprintf("//<%s:%d>\n", clientMsgName, msgNum)
+				} else {
+					messageProtoCode += fmt.Sprintf("//<%s:%d>\n", clientMsgName, msgNum)
+				}
+
 
 				protoCodeEncodeBody += fmt.Sprintf("encode(#%s{} = Msg) ->\n", clientMsgName)
 
@@ -204,13 +215,13 @@ func main() {
 
 				protoCodeDecodeBody += fmt.Sprintf("  p_message:decode_msg(Bin, %s);\n", clientMsgName)
 
-				if msgNum == 1 {
+				if msgNum == 1 || (msgNum >= 9900 && msgNum < 10000) {
 					socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{player_id = _PlayerId}) ->\n", msgNum)
 				} else if msgNum == 3 {
 					socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{status = ?CLIENT_STATE_WAIT_CREATE_ROLE, player_id = _PlayerId}) ->\n", msgNum)
 				} else if msgNum == 5 {
 					socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{status = ?CLIENT_STATE_WAIT_ENTER_GAME, player_id = _PlayerId}) ->\n", msgNum)
-				} else if msgNum >= 10000 && msgNum < 10100 {
+				} else if msgNum >= 10000 && msgNum < 10100  {
 					socketRouterBody += fmt.Sprintf("handle(%d, Bin, State = #conn{player_id = _PlayerId}) ->\n", msgNum)
 					socketRouterBody += fmt.Sprintf("    ?ASSERT(?IS_DEBUG, {proto_no_debug, %d}),\n", msgNum)
 				} else {
@@ -235,7 +246,13 @@ func main() {
 
 				context = regexp.MustCompile(msgName).ReplaceAllString(context, clientMsgName)
 
-				messageProtoCode += fmt.Sprintf("//<%s:%d>\n", clientMsgName, msgNum)
+
+
+				if moduleNum == 99 {
+					gmContent += fmt.Sprintf("//<%s:%d>\n", clientMsgName, msgNum)
+				} else {
+					messageProtoCode += fmt.Sprintf("//<%s:%d>\n", clientMsgName, msgNum)
+				}
 
 				protoCodeEncodeBody += fmt.Sprintf("encode(#%s{} = Msg) ->\n", clientMsgName)
 
@@ -247,7 +264,6 @@ func main() {
 
 				protoCodeDecodeBody += fmt.Sprintf("  p_message:decode_msg(Bin, %s);\n", clientMsgName)
 			}
-
 		}
 		//reg = regexp.MustCompile(`message[ \t\n\r]+m_([\w]+)_toc[ \t\n\r]+{`)
 		//matchArray = reg.FindAllStringSubmatch(context, -1)
@@ -282,7 +298,13 @@ func main() {
 		//
 		//	protoCodeDecodeBody += fmt.Sprintf("  p_%s:decode_msg(Bin, %s);\n", moduleName, msgName)
 		//}
-		messageProtoCode += context
+
+		if moduleNum == 99 {
+			gmContent += context
+		} else {
+			messageProtoCode += context
+		}
+
 
 		reg = regexp.MustCompile(`enum\s+\w+\s*{([^}]*)}`)
 		matchArray = reg.FindAllStringSubmatch(noAnnotationContext, -1)
@@ -334,7 +356,7 @@ func main() {
 	if isCreateClientProto == "true" {
 		filePutContext(clientProtoPath+"message.proto", messageProtoCode)
 	}
-	filePutContext(tmpProtoPath+"message.proto", messageProtoCode)
+	filePutContext(tmpProtoPath+"message.proto", messageProtoCode + gmContent)
 	commandArgs := []string{
 		"proto.escript",
 		"-type",
