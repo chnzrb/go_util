@@ -1,0 +1,21 @@
+{
+    "ignore_list": [
+	    "db_version",
+		"activity_award",
+		"activity_data_info",
+		"battleground_boss_record",
+		"robot_player_data"
+	],
+   "clean_list": [
+        "player_arena_fight_record",
+		"player_arena_target",
+		"player_login_log",
+		"player_offline_apply",
+		"player_online_log",
+		"player_prop_log",
+		"rank_info",
+		"test",
+		"timer_data",
+		"server_data"
+	]
+}

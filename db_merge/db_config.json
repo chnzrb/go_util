@@ -1,0 +1,18 @@
+{
+    "target_db": {
+		"db_host": "localhost",
+		"db_name": "game",
+		"db_user": "root",
+		"db_port": 3306,
+		"db_pwd": "game1234"
+	},
+	"source_db_list": [
+		{
+			"db_host": "localhost",
+			"db_name": "game1",
+			"db_user": "root",
+			"db_port": 3306,
+			"db_pwd": "game1234"
+		}
+	]
+}
