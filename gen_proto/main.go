@@ -93,6 +93,13 @@ func main() {
 	protoCodeHead += "-export([encode/1, decode/1]).\n"
 	protoCodeHead += "-include(\"p_message.hrl\").\n\n"
 
+	protoCodeHead += "-ifdef(debug).\n"
+	protoCodeHead += "-define(ENCODE_OPTS, [{verify, true}]).\n"
+	protoCodeHead += "-else.\n"
+	protoCodeHead += "-define(ENCODE_OPTS, []).\n"
+	protoCodeHead += "-endif.\n\n"
+
+
 	protoCodeEncodeBody := ""
 
 	protoCodeDecodeBody := "decode(<<_IsZip:8, Method:32/unsigned, Data/binary>>) ->\n"
@@ -207,7 +214,7 @@ func main() {
 
 				protoCodeEncodeBody += fmt.Sprintf("encode(#%s{} = Msg) ->\n", clientMsgName)
 
-				protoCodeEncodeBody += fmt.Sprintf("    Bin = p_message:encode_msg(Msg),\n")
+				protoCodeEncodeBody += fmt.Sprintf("    Bin = p_message:encode_msg(Msg, ?ENCODE_OPTS),\n")
 
 				protoCodeEncodeBody += fmt.Sprintf("    encode(%d, Bin);\n", msgNum)
 
@@ -256,7 +263,7 @@ func main() {
 
 				protoCodeEncodeBody += fmt.Sprintf("encode(#%s{} = Msg) ->\n", clientMsgName)
 
-				protoCodeEncodeBody += fmt.Sprintf("    Bin = p_message:encode_msg(Msg),\n")
+				protoCodeEncodeBody += fmt.Sprintf("    Bin = p_message:encode_msg(Msg, ?ENCODE_OPTS),\n")
 
 				protoCodeEncodeBody += fmt.Sprintf("    encode(%d, Bin);\n", msgNum)
 
@@ -335,20 +342,24 @@ func main() {
 	protoCodeDecodeBody += "decode(MsgNum, _) ->\n"
 	protoCodeDecodeBody += "    exit({unexpected_proto_num, MsgNum}).\n"
 
+	// 去除压缩功能 20180725
+	//protoCodeEncodeBody += "\n\nencode(MethodNum, Bin) ->\n"
+	//protoCodeEncodeBody += "    Len = iolist_size(Bin),\n"
+	//protoCodeEncodeBody += "    if Len > 150000 ->\n"
+	//protoCodeEncodeBody += "        Bin1 = zlib:compress(Bin),\n"
+	//protoCodeEncodeBody += "        Len1 = iolist_size(Bin1),\n"
+	//protoCodeEncodeBody += "        if Len1 < Len ->\n"
+	//protoCodeEncodeBody += "            io:format(\"proto compress:~p~n\", [{MethodNum, Len, Len1}]),\n"
+	//protoCodeEncodeBody += "            util_websocket:pack_packet(<<1, MethodNum:32, Bin1/binary>>);\n"
+	//protoCodeEncodeBody += "            true ->\n"
+	//protoCodeEncodeBody += "                util_websocket:pack_packet(<<0, MethodNum:32, Bin/binary>>)\n"
+	//protoCodeEncodeBody += "        end;\n"
+	//protoCodeEncodeBody += "    true ->\n"
+	//protoCodeEncodeBody += "        util_websocket:pack_packet(<<0, MethodNum:32, Bin/binary>>)\n"
+	//protoCodeEncodeBody += "    end.\n"
+
 	protoCodeEncodeBody += "\n\nencode(MethodNum, Bin) ->\n"
-	protoCodeEncodeBody += "    Len = iolist_size(Bin),\n"
-	protoCodeEncodeBody += "    if Len > 150000 ->\n"
-	protoCodeEncodeBody += "        Bin1 = zlib:compress(Bin),\n"
-	protoCodeEncodeBody += "        Len1 = iolist_size(Bin1),\n"
-	protoCodeEncodeBody += "        if Len1 < Len ->\n"
-	protoCodeEncodeBody += "            io:format(\"proto compress:~p~n\", [{MethodNum, Len, Len1}]),\n"
-	protoCodeEncodeBody += "            util_websocket:pack_packet(<<1, MethodNum:32, Bin1/binary>>);\n"
-	protoCodeEncodeBody += "            true ->\n"
-	protoCodeEncodeBody += "                util_websocket:pack_packet(<<0, MethodNum:32, Bin/binary>>)\n"
-	protoCodeEncodeBody += "        end;\n"
-	protoCodeEncodeBody += "    true ->\n"
-	protoCodeEncodeBody += "        util_websocket:pack_packet(<<0, MethodNum:32, Bin/binary>>)\n"
-	protoCodeEncodeBody += "    end.\n"
+	protoCodeEncodeBody += "      util_websocket:pack_packet(<<0, MethodNum:32, Bin/binary>>).\n\n\n"
 
 	include += "\n\n"
 	filePutContext(genSrcPath+"socket_router.erl", socketRouterHead+include+socketRouterBody)
@@ -372,8 +383,8 @@ func main() {
 		genSrcPath,
 		"-o-hrl",
 		includePath,
-		"-v",
-		"always",
+		//"-v",
+		//"never",
 		"message.proto",
 	}
 
