@@ -1,7 +1,7 @@
 {
     "target_db": {
 		"db_host": "localhost",
-		"db_name": "game",
+		"db_name": "db_game_s4",
 		"db_user": "root",
 		"db_port": 3306,
 		"db_pwd": "game1234"
@@ -9,10 +9,13 @@
 	"source_db_list": [
 		{
 			"db_host": "localhost",
-			"db_name": "game1",
+			"db_name": "db_game_s5",
 			"db_user": "root",
 			"db_port": 3306,
 			"db_pwd": "game1234"
 		}
-	]
+	],
+	"clean_level":200,
+	"clean_vip_level":0,
+	"clean_no_login_day":7
 }

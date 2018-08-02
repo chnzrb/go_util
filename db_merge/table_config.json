@@ -8,7 +8,9 @@
 	],
    "clean_list": [
         "player_arena_fight_record",
+		"player_arena",
 		"player_arena_target",
+		"player_assassinate_state",
 		"player_login_log",
 		"player_offline_apply",
 		"player_online_log",
@@ -17,5 +19,8 @@
 		"test",
 		"timer_data",
 		"server_data"
+	],
+	"foreign_key_map_list": [
+	    {"table":"player_arena_fight_record", "filed":"fight_player_id", "foreign_table":"player", "foreign_key": "id"}
 	]
 }
