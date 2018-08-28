@@ -118,6 +118,19 @@ func main() {
 
 	fmt.Printf("开始合服:\n")
 	doMerge(dbConfig, tableConfig)
+
+	// 设置目标服执行合服脚本
+	//sql := fmt.Sprintf("delete from `server_data` where id in(6,7);")
+	//_, err = dbConfig.TargetDb.Db.Exec(sql)
+	//CheckError(err, "设置目标服执行合服脚本失败:"+sql)
+
+	sql := fmt.Sprintf("INSERT INTO `server_data` VALUES (7,1,''),(6,%d,'');", GetTimestamp())
+	_, err = dbConfig.TargetDb.Db.Exec(sql)
+	CheckError(err, "设置目标服执行合服脚本失败:"+sql)
+
+	if err != nil {
+		os.Exit(1)
+	}
 	usedTime := time.Since(t0)
 	fmt.Print("\n")
 	fmt.Print("*****************************************************\n")
@@ -129,8 +142,15 @@ func main() {
 func doClean(dbConfig *db, cleanLevel int, cleanVipLevel int, cleanNoLoginDay int, dBMetas []*core.Table, tableConfig *tableConfig) {
 	//fmt.Printf("%s %s ", fmt.Sprintf("开始清理 %s", dbConfig.DbName), strings.Repeat(".", 50-len(fmt.Sprintf("开始清理 %s", dbConfig.DbName))))
 	fmt.Printf("开始清理数据库:%s......\n", dbConfig.DbName)
+
+	sql := fmt.Sprintf("update player_data, player_vip set player_data.vip_level = player_vip.level where player_data.player_id = player_vip.player_id;")
+	_, err := dbConfig.Db.Exec(sql)
+	CheckError(err, "修复vip关联bug")
+
 	now := GetTimestamp()
-	sql := fmt.Sprintf("delete player from player, player_data where player.`id` = player_data.`player_id` and player.`last_login_time` < %d and player_data.`level` <= %d and player_data.`vip_level` <= %d", now - 86400 * cleanNoLoginDay, cleanLevel, cleanVipLevel)
+	//sql := fmt.Sprintf("delete player from player, player_data where player.`id` = player_data.`player_id` and player.`last_login_time` < %d and player_data.`level` <= %d and player_data.`vip_level` <= %d and player.`id` NOT IN (SELECT `manage_player_id` FROM `faction`)", now - 86400 * cleanNoLoginDay, cleanLevel, cleanVipLevel)
+	sql = fmt.Sprintf("delete player from player, player_data where player.`id` = player_data.`player_id` and player.`last_login_time` < %d and player_data.`level` <= %d and player_data.`vip_level` <= %d  ", now - 86400 * cleanNoLoginDay, cleanLevel, cleanVipLevel)
+
 	r, err := dbConfig.Db.Exec(sql)
 	CheckError(err, "清理玩家失败:")
 	cleanNum, err := r.RowsAffected()
@@ -199,6 +219,10 @@ func doMerge(dbConfig *dbConfig, tableConfig *tableConfig) {
 
 	for _, dbMeta := range dBMetas {
 		tableName := dbMeta.Name
+		//if tableName == "player_offline_apply" {
+		//	fmt.Printf("%+v\n", dbMeta.AutoIncrement)
+		//	fmt.Printf("%+v\n", dbMeta)
+		//}
 		if inArray(tableName, tableConfig.IgnoreList) {
 			// 使用目标数据库的数据
 			fmt.Printf("%s %s [ignore]\n", tableName, strings.Repeat(".", 50-len(tableName)))
@@ -226,6 +250,9 @@ func doMerge(dbConfig *dbConfig, tableConfig *tableConfig) {
 					for _, row := range rows {
 						insertCols := make([] string, 0)
 						for col, value := range row {
+							if dbMeta.AutoIncrement != "" && dbMeta.AutoIncrement == col {
+								continue
+							}
 							insertCols = append(insertCols, fmt.Sprintf("`%s` = '%s'", col, value))
 						}
 						insertSql := fmt.Sprintf("INSERT INTO `%s` set %s", tableName, strings.Join(insertCols, ", "))
